@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Hockey Life</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <header id="main-header">
+            <div id="player-stats">
+                <span><i class="fa-solid fa-user"></i> <strong id="player-name"></strong></span>
+                <span><i class="fa-solid fa-brain"></i> Stress: <strong id="player-stress">0</strong></span>
+                <span><i class="fa-solid fa-star"></i> Reputation: <strong id="player-reputation">0</strong></span>
+            </div>
+            <div id="game-date-display"><i class="fa-solid fa-calendar-days"></i> <span id="game-date"></span></div>
+        </header>
+
+        <div id="map-container"></div>
+
+        <div id="menu-button-container">
+            <button id="main-menu-button"><i class="fa-solid fa-bars"></i> Menu</button>
+        </div>
+    </div>
+
+    <div id="menu-overlay" class="hidden">
+        <div id="menu-content">
+            <div id="menu-tabs">
+                <button class="menu-tab-link active" data-tab="Profile">Profile</button>
+                <button class="menu-tab-link" data-tab="Schedule">Schedule</button>
+                <button class="menu-tab-link" data-tab="Team">Team</button>
+            </div>
+            <div id="menu-tab-content">
+                <div id="Profile" class="menu-tab active">Player profile info here...</div>
+                <div id="Schedule" class="menu-tab">Weekly schedule info here...</div>
+                <div id="Team" class="menu-tab">Team roster and lines info here...</div>
+            </div>
+        </div>
+        <button id="close-menu-button"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    
+    <div id="event-modal" class="hidden">
+        <div id="event-content">
+            <h2 id="event-title"></h2>
+            <p id="event-text"></p>
+            <div id="event-choices"></div>
+        </div>
+    </div>
+
+    <button id="phone-icon">
+        <i class="fa-solid fa-mobile-screen-button"></i>
+        <span id="notification-badge" class="hidden">0</span>
+    </button>
+    <div id="phone-modal" class="hidden">
+        <div id="phone-container">
+            <div id="phone-screen">
+                </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
