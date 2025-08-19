@@ -101,7 +101,6 @@ export function showEvent(eventId) {
         };
         elements.eventChoices.appendChild(button);
     });
-    document.getElementById('sound-effect').play(); // New: Play audio
 }
 
 // New: Update stat chart
@@ -131,14 +130,20 @@ function updateStatChart() {
 // Initialize UI event listeners
 export function initializeUIListeners() {
     // Menu button listeners
-    document.getElementById('main-menu-button').addEventListener('click', () => { 
-        updateDashboardUI(); 
-        elements.menuOverlay.classList.remove('hidden'); 
-    });
+    const mainMenuButton = document.getElementById('main-menu-button');
+    if (mainMenuButton) {
+        mainMenuButton.addEventListener('click', () => { 
+            updateDashboardUI(); 
+            elements.menuOverlay.classList.remove('hidden'); 
+        });
+    }
     
-    document.getElementById('close-menu-button').addEventListener('click', () => 
-        elements.menuOverlay.classList.add('hidden')
-    );
+    const closeMenuButton = document.getElementById('close-menu-button');
+    if (closeMenuButton) {
+        closeMenuButton.addEventListener('click', () => 
+            elements.menuOverlay.classList.add('hidden')
+        );
+    }
     
     // Menu tab navigation
     document.querySelectorAll('.menu-tab-link').forEach(tab => {
