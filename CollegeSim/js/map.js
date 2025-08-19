@@ -227,6 +227,13 @@ export function initializeMap(gameState) {
         
         // Add player marker
         addPlayerMarker(gameState);
+
+        // New: Day/night cycle
+        setInterval(() => {
+            const hour = gameState.gameDate.getHours();
+            const opacity = (hour > 18 || hour < 6) ? 0.95 : 0.85;
+            map.setPaintProperty('campus-mask-layer', 'fill-opacity', opacity);
+        }, 1000);
     });
 
     gameState.mapInitialized = true;
@@ -262,4 +269,9 @@ export function updatePlayerPosition(coordinates) {
     
     // Optional: Pan map to follow player
     map.panTo(coordinates, { duration: 1000 });
+
+    // New: Random encounter en route
+    if (Math.random() < 0.2) {
+        showEvent('event_random_encounter'); // e.g., bump into prof
+    }
 }

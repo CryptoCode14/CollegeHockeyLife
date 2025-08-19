@@ -2,6 +2,10 @@
 import { gameState, addMessage } from '../main.js';
 import { elements } from './base.js';
 import { generateNpcReply } from '../npc-logic.js';
+import { generateSocialPosts } from '../social-data.js';
+import { renderMessages } from '../phone-messages.js';
+import { renderApps } from '../phone-apps.js';
+import { renderNews } from '../social-data.js';
 
 // Track current phone state
 let currentPhoneScreen = 'home';
@@ -20,6 +24,7 @@ export const appIcons = {
     maps: { name: 'Maps', icon: 'fa-map-location-dot' },
     weather: { name: 'Weather', icon: 'fa-cloud-sun' },
     fitness: { name: 'Fitness', icon: 'fa-dumbbell' },
+    news: { name: 'News', icon: 'fa-newspaper' }
 };
 
 // Initialize phone UI
@@ -97,15 +102,12 @@ const phoneTemplates = {
                     const timestamp = msg.timestamp ? formatMessageTime(msg.timestamp) : '';
                     return `
                     <div class="chat-bubble-container ${msg.sender === 'player' ? 'sent' : 'received'}">
-                        <div class="chat-bubble ${msg.sender === 'player' ? 'sent' : 'received'}">
-                            ${msg.text}
-                            <div class="message-timestamp">${timestamp}</div>
-                        </div>
-                    </div>`;
-                }).join('')}
+                        <div class="chat-bubble">${msg.text}</div>
+                        <div class="chat-timestamp">${timestamp}</div>
+                    </div>
+                `}).join('')}
             </div>
             <div class="chat-input-area">
-                <button class="chat-emoji-button"><i class="fa-regular fa-face-smile"></i></button>
                 <input type="text" id="chat-input" placeholder="Message...">
                 <button id="send-chat-button"><i class="fa-solid fa-paper-plane"></i></button>
             </div>
@@ -129,14 +131,6 @@ const phoneTemplates = {
                     <span>Wallpaper</span> 
                     <span class="setting-value">&gt;</span>
                 </div>
-                <div class="settings-item" data-setting="notifications">
-                    <span>Notifications</span> 
-                    <span class="setting-value">On &gt;</span>
-                </div>
-                <div class="settings-item" data-setting="about">
-                    <span>About</span> 
-                    <span class="setting-value">&gt;</span>
-                </div>
             </div>
         </div>`,
 
@@ -149,9 +143,6 @@ const phoneTemplates = {
                 <div class="placeholder"></div>
             </div>
             <div class="app-content app-list">
-                <div class="app-store-featured">
-                    <h3>Featured Apps</h3>
-                </div>
                 ${gameState.phone.appStore.available.map(appId => `
                     <div class="app-list-item">
                         <i class="fa-solid ${appIcons[appId].icon} app-list-icon"></i>
@@ -162,474 +153,257 @@ const phoneTemplates = {
                         <button class="app-download-button" data-app-id="${appId}">GET</button>
                     </div>
                 `).join('')}
-                ${gameState.phone.installedApps.filter(app => ['calendar', 'camera', 'notes', 'maps', 'weather', 'fitness'].includes(app)).map(appId => `
-                    <div class="app-list-item">
-                        <i class="fa-solid ${appIcons[appId].icon} app-list-icon"></i>
-                        <div class="app-list-info">
-                            <strong>${appIcons[appId].name}</strong>
-                            <span>Productivity</span>
-                        </div>
-                        <button class="app-download-button installed">INSTALLED</button>
-                    </div>
-                `).join('')}
+                ${gameState.phone.installedApps.includes('calendar') ? `<div class="app-list-item"><i class="fa-solid fa-calendar-days app-list-icon"></i><div class="app-list-info"><strong>Calendar</strong><span>Productivity</span></div><button class="app-download-button installed">Installed</button></div>` : ''}
             </div>
         </div>`,
 
-    // Social media app (Chirper)
+    // Chirper (Social Feed)
     chirper: () => `
-        <div class="phone-app-view">
+        <div class="phone-app-view app-chirper">
             <div class="app-header">
                 <div class="back-button" data-app="home">&lt;</div>
                 <div class="header-title">Chirper</div>
-                <div class="header-action"><i class="fa-solid fa-feather"></i></div>
+                <div class="placeholder"></div>
             </div>
             <div class="app-content social-feed">
-                <div class="chirper-tabs">
-                    <div class="chirper-tab active">For You</div>
-                    <div class="chirper-tab">Following</div>
-                    <div class="chirper-tab">Hockey</div>
-                </div>
                 ${gameState.phone.social.posts.map(post => `
                     <div class="social-post">
-                        <div class="post-avatar" style="background-color:${post.avatarColor};">${post.user.charAt(0)}</div>
-                        <div class="post-content">
-                            <div class="post-header">
-                                <strong>${post.user}</strong> 
-                                <span class="post-handle">@${post.handle}</span>
-                                <span class="post-time">${post.time || '2h'}</span>
+                        <div class="post-header">
+                            <div class="post-avatar" style="background-color:${post.avatarColor};">${post.user.charAt(0)}</div>
+                            <div>
+                                <strong>${post.user}</strong> @${post.handle} · ${post.time}
                             </div>
-                            <div class="post-text">${post.text}</div>
-                            <div class="post-actions">
-                                <span class="post-action"><i class="fa-regular fa-comment"></i> ${post.comments || 0}</span>
-                                <span class="post-action"><i class="fa-solid fa-retweet"></i> ${post.retweets || 0}</span>
-                                <span class="post-action"><i class="fa-regular fa-heart"></i> ${post.likes || 0}</span>
-                                <span class="post-action"><i class="fa-solid fa-share-nodes"></i></span>
-                            </div>
+                        </div>
+                        <p>${post.text}</p>
+                        <div class="post-actions">
+                            <span>❤️ ${post.likes}</span>
+                            <span>🔁 ${post.retweets}</span>
+                            <span>💬 ${post.comments}</span>
                         </div>
                     </div>
                 `).join('')}
             </div>
         </div>`,
 
-    // Dating app (Rink Rater)
+    // Rink Rater (Dating App)
     rinkrater: () => {
-        const { profiles, currentIndex } = gameState.phone.dating;
-        const profile = profiles[currentIndex];
+        const profile = gameState.phone.dating.profiles[gameState.phone.dating.currentIndex % gameState.phone.dating.profiles.length];
         return `
-        <div class="phone-app-view dating-app">
+        <div class="phone-app-view app-rinkrater">
             <div class="app-header">
                 <div class="back-button" data-app="home">&lt;</div>
                 <div class="header-title">Rink Rater</div>
-                <div class="header-action"><i class="fa-solid fa-sliders"></i></div>
+                <div class="placeholder"></div>
             </div>
-            <div class="app-content">
-                ${profile ? `
-                <div class="dating-card">
-                    <img src="${profile.img}" class="dating-img" alt="${profile.name}" />
-                    <div class="dating-info">
-                        <h3>${profile.name}</h3>
-                        <p>${profile.bio}</p>
-                        <div class="profile-details">
-                            <span><i class="fa-solid fa-graduation-cap"></i> ${profile.school || 'Penn State'}</span>
-                            <span><i class="fa-solid fa-location-dot"></i> ${profile.distance || '1 mile away'}</span>
-                        </div>
-                    </div>
+            <div class="app-content dating-profile">
+                <img src="${profile.img}" alt="${profile.name}">
+                <h2>${profile.name}</h2>
+                <p>${profile.bio}</p>
+                <div class="interests">${profile.interests.join(', ')}</div>
+                <div class="swipe-buttons">
+                    <button class="swipe-button dislike" data-swipe="left">❌</button>
+                    <button class="swipe-button like" data-swipe="right">❤️</button>
                 </div>
-                <div class="dating-controls">
-                    <button class="swipe-button" data-swipe="left"><i class="fa-solid fa-xmark"></i></button>
-                    <button class="swipe-button" data-swipe="right"><i class="fa-solid fa-heart"></i></button>
-                </div>
-                ` : `
-                <div class="dating-card-empty">
-                    <i class="fa-solid fa-face-frown"></i>
-                    <p>No more profiles in your area</p>
-                    <button class="refresh-profiles-button">Refresh</button>
-                </div>`}
-                ${gameState.phone.dating.matches.length > 0 ? `
-                <div class="dating-matches">
-                    <h3>Your Matches</h3>
-                    <div class="matches-grid">
-                        ${gameState.phone.dating.matches.map(match => `
-                            <div class="match-item" data-match-id="${match.id}">
-                                <div class="match-avatar" style="background-image: url('${match.img}')"></div>
-                                <div class="match-name">${match.name.split(',')[0]}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>` : ''}
+                <button class="refresh-profiles-button">Refresh Profiles</button>
             </div>
         </div>`;
     },
 
-    // Calendar app
-    calendar: () => {
-        const today = new Date(gameState.gameDate);
-        const dayOfWeek = today.getDay();
-        const month = today.getMonth();
-        const date = today.getDate();
-        
-        // Generate calendar grid
-        const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
-                           'July', 'August', 'September', 'October', 'November', 'December'];
-        
-        // Get events for today
-        const todayStr = today.toISOString().split('T')[0];
-        const todayEvents = gameState.phone.calendar.events.filter(event => event.date === todayStr);
-        
-        return `
-        <div class="phone-app-view">
+    // Calendar App
+    calendar: () => `
+        <div class="phone-app-view app-calendar">
             <div class="app-header">
                 <div class="back-button" data-app="home">&lt;</div>
                 <div class="header-title">Calendar</div>
-                <div class="header-action"><i class="fa-solid fa-plus"></i></div>
+                <div class="placeholder"></div>
             </div>
-            <div class="app-content calendar-view">
-                <div class="calendar-header">
-                    <h3>${monthNames[month]} ${today.getFullYear()}</h3>
-                </div>
-                <div class="calendar-days">
-                    ${daysOfWeek.map(day => `<div class="day-name">${day}</div>`).join('')}
-                    ${Array.from({length: 7}, (_, i) => {
-                        const dayDate = new Date(today);
-                        dayDate.setDate(date - dayOfWeek + i);
-                        const isToday = dayDate.getDate() === date;
-                        const hasEvents = gameState.phone.calendar.events.some(
-                            event => event.date === dayDate.toISOString().split('T')[0]
-                        );
-                        return `
-                            <div class="calendar-day ${isToday ? 'today' : ''} ${hasEvents ? 'has-events' : ''}">
-                                ${dayDate.getDate()}
-                            </div>`;
-                    }).join('')}
-                </div>
-                
-                <div class="today-events">
-                    <h3>Today's Schedule</h3>
-                    ${todayEvents.length > 0 ? todayEvents.map(event => `
-                        <div class="calendar-event">
-                            <div class="event-time">${event.time}</div>
-                            <div class="event-details">
-                                <div class="event-title">${event.title}</div>
-                                <div class="event-location">${event.location || ''}</div>
-                            </div>
-                        </div>
-                    `).join('') : '<div class="no-events">No events scheduled</div>'}
-                </div>
+            <div class="app-content calendar-events">
+                ${gameState.phone.calendar.events.map(event => `
+                    <div class="calendar-event">
+                        <div>${event.date} ${event.time}</div>
+                        <strong>${event.title}</strong>
+                        <span>${event.location}</span>
+                    </div>
+                `).join('')}
             </div>
-        </div>`;
-    },
-    
-    // Camera app
+        </div>`,
+
+    // Camera App (Placeholder)
     camera: () => `
-        <div class="phone-app-view camera-app">
+        <div class="phone-app-view app-camera">
             <div class="app-header">
                 <div class="back-button" data-app="home">&lt;</div>
                 <div class="header-title">Camera</div>
                 <div class="placeholder"></div>
             </div>
-            <div class="app-content">
-                <div class="camera-viewfinder">
-                    <div class="camera-overlay">
-                        <div class="camera-focus-box"></div>
-                    </div>
-                </div>
-                <div class="camera-controls">
-                    <button class="camera-mode-button"><i class="fa-solid fa-camera-rotate"></i></button>
-                    <button class="camera-shutter-button"></button>
-                    <button class="camera-gallery-button"><i class="fa-solid fa-images"></i></button>
-                </div>
+            <div class="app-content camera-view">
+                <div class="camera-preview">Camera Preview (Placeholder)</div>
+                <button class="camera-shutter"><i class="fa-solid fa-camera"></i></button>
             </div>
         </div>`,
-        
-    // Notes app
+
+    // Notes App
     notes: () => `
-        <div class="phone-app-view">
+        <div class="phone-app-view app-notes">
             <div class="app-header">
                 <div class="back-button" data-app="home">&lt;</div>
                 <div class="header-title">Notes</div>
                 <div class="header-action"><i class="fa-solid fa-plus"></i></div>
             </div>
             <div class="app-content notes-list">
-                <div class="notes-search">
-                    <input type="text" placeholder="Search" />
-                </div>
-                ${(gameState.phone.notes || []).map((note, index) => `
-                    <div class="note-item" data-note-id="${index}">
-                        <div class="note-title">${note.title}</div>
-                        <div class="note-preview">${note.content.substring(0, 40)}${note.content.length > 40 ? '...' : ''}</div>
-                        <div class="note-date">${formatNoteDate(note.date)}</div>
+                ${gameState.phone.notes.map(note => `
+                    <div class="note-item">
+                        <strong>${note.title}</strong>
+                        <p>${note.content}</p>
+                        <span>${note.date.toLocaleDateString()}</span>
                     </div>
-                `).join('') || `
-                    <div class="empty-notes">
-                        <i class="fa-regular fa-note-sticky"></i>
-                        <p>No Notes</p>
-                        <p>Tap + to create a new note</p>
-                    </div>
-                `}
+                `).join('')}
             </div>
         </div>`,
-        
-    // Maps app
+
+    // Maps App
     maps: () => `
-        <div class="phone-app-view maps-app">
+        <div class="phone-app-view app-maps">
             <div class="app-header">
                 <div class="back-button" data-app="home">&lt;</div>
                 <div class="header-title">Maps</div>
                 <div class="placeholder"></div>
             </div>
-            <div class="app-content">
-                <div class="maps-search-bar">
-                    <input type="text" placeholder="Search for places" />
-                </div>
-                <div class="maps-view">
-                    <div class="maps-placeholder">
-                        <i class="fa-solid fa-map-location-dot"></i>
-                        <p>Campus Map</p>
-                    </div>
-                </div>
-                <div class="maps-locations">
-                    <div class="location-item" data-location="pegula">
-                        <i class="fa-solid fa-hockey-puck"></i>
-                        <span>Pegula Ice Arena</span>
-                    </div>
-                    <div class="location-item" data-location="library">
-                        <i class="fa-solid fa-book"></i>
-                        <span>Pattee Library</span>
-                    </div>
-                    <div class="location-item" data-location="dorm">
-                        <i class="fa-solid fa-bed"></i>
-                        <span>East Halls</span>
-                    </div>
+            <div class="app-content maps-view">
+                <div class="location-list">
+                    <div class="location-item" data-location="pegula"><i class="fa-solid fa-hockey-puck"></i>Pegula Ice Arena</div>
+                    <div class="location-item" data-location="library"><i class="fa-solid fa-book"></i>Pattee Library</div>
+                    <div class="location-item" data-location="dorm"><i class="fa-solid fa-bed"></i>East Halls</div>
+                    <div class="location-item" data-location="business"><i class="fa-solid fa-landmark"></i>Business Building</div>
+                    <div class="location-item" data-location="hub"><i class="fa-solid fa-utensils"></i>HUB-Robeson Center</div>
+                    <div class="location-item" data-location="rec"><i class="fa-solid fa-dumbbell"></i>Recreation Center</div>
                 </div>
             </div>
         </div>`,
-        
-    // Weather app
+
+    // Weather App
     weather: () => `
-        <div class="phone-app-view weather-app">
+        <div class="phone-app-view app-weather">
             <div class="app-header">
                 <div class="back-button" data-app="home">&lt;</div>
                 <div class="header-title">Weather</div>
                 <div class="placeholder"></div>
             </div>
-            <div class="app-content">
+            <div class="app-content weather-view">
                 <div class="weather-location">State College, PA</div>
                 <div class="current-weather">
-                    <div class="weather-icon">
-                        <i class="fa-solid fa-sun"></i>
-                    </div>
-                    <div class="weather-temp">28°</div>
+                    <i class="fa-solid fa-sun weather-icon"></i>
+                    <div class="weather-temp">72°F</div>
                     <div class="weather-desc">Sunny</div>
                 </div>
                 <div class="weather-details">
-                    <div class="weather-detail">
-                        <span>Feels like</span>
-                        <span>26°</span>
-                    </div>
-                    <div class="weather-detail">
-                        <span>Humidity</span>
-                        <span>45%</span>
-                    </div>
-                    <div class="weather-detail">
-                        <span>Wind</span>
-                        <span>8 mph</span>
-                    </div>
+                    <div class="weather-detail"><span>Humidity</span> 65%</div>
+                    <div class="weather-detail"><span>Wind</span> 5 mph</div>
+                    <div class="weather-detail"><span>UV Index</span> 7</div>
                 </div>
-                <div class="weather-forecast">
-                    <h3>5-Day Forecast</h3>
-                    <div class="forecast-days">
-                        <div class="forecast-day">
-                            <div>Mon</div>
-                            <i class="fa-solid fa-sun"></i>
-                            <div>30°</div>
-                        </div>
-                        <div class="forecast-day">
-                            <div>Tue</div>
-                            <i class="fa-solid fa-cloud-sun"></i>
-                            <div>28°</div>
-                        </div>
-                        <div class="forecast-day">
-                            <div>Wed</div>
-                            <i class="fa-solid fa-cloud"></i>
-                            <div>25°</div>
-                        </div>
-                        <div class="forecast-day">
-                            <div>Thu</div>
-                            <i class="fa-solid fa-cloud-rain"></i>
-                            <div>22°</div>
-                        </div>
-                        <div class="forecast-day">
-                            <div>Fri</div>
-                            <i class="fa-solid fa-snowflake"></i>
-                            <div>20°</div>
-                        </div>
-                    </div>
+                <div class="forecast-days">
+                    <div class="forecast-day"><span>Mon</span><i class="fa-solid fa-cloud"></i>68°</div>
+                    <div class="forecast-day"><span>Tue</span><i class="fa-solid fa-cloud-rain"></i>65°</div>
+                    <div class="forecast-day"><span>Wed</span><i class="fa-solid fa-sun"></i>75°</div>
+                    <div class="forecast-day"><span>Thu</span><i class="fa-solid fa-cloud-sun"></i>72°</div>
+                    <div class="forecast-day"><span>Fri</span><i class="fa-solid fa-wind"></i>70°</div>
                 </div>
             </div>
         </div>`,
-        
-    // Fitness app
+
+    // Fitness App
     fitness: () => `
-        <div class="phone-app-view fitness-app">
+        <div class="phone-app-view app-fitness">
             <div class="app-header">
                 <div class="back-button" data-app="home">&lt;</div>
                 <div class="header-title">Fitness</div>
-                <div class="header-action"><i class="fa-solid fa-plus"></i></div>
+                <div class="placeholder"></div>
             </div>
-            <div class="app-content">
+            <div class="app-content fitness-view">
                 <div class="fitness-summary">
                     <div class="fitness-rings">
-                        <svg width="120" height="120" viewBox="0 0 120 120">
-                            <circle cx="60" cy="60" r="50" fill="none" stroke="#333" stroke-width="10" />
-                            <circle cx="60" cy="60" r="50" fill="none" stroke="#ff5733" stroke-width="10" 
-                                    stroke-dasharray="314" stroke-dashoffset="78" />
-                        </svg>
                         <div class="fitness-stats">
-                            <div>75%</div>
-                            <div>Daily Goal</div>
+                            <div>${gameState.phone.fitness.currentSteps}</div>
+                            <div>Steps</div>
                         </div>
                     </div>
                     <div class="fitness-metrics">
                         <div class="fitness-metric">
-                            <i class="fa-solid fa-person-walking"></i>
-                            <div>
-                                <div class="metric-value">7,245</div>
-                                <div class="metric-label">Steps</div>
-                            </div>
+                            <i class="fa-solid fa-walking"></i>
+                            <div class="metric-value">${gameState.phone.fitness.currentSteps}</div>
+                            <div class="metric-label">Steps</div>
                         </div>
                         <div class="fitness-metric">
-                            <i class="fa-solid fa-fire"></i>
-                            <div>
-                                <div class="metric-value">320</div>
-                                <div class="metric-label">Calories</div>
-                            </div>
+                            <i class="fa-solid fa-heart-pulse"></i>
+                            <div class="metric-value">1450</div>
+                            <div class="metric-label">Calories</div>
                         </div>
                     </div>
                 </div>
                 <div class="fitness-workouts">
                     <h3>Recent Workouts</h3>
-                    <div class="workout-item">
-                        <div class="workout-icon"><i class="fa-solid fa-hockey-puck"></i></div>
-                        <div class="workout-details">
-                            <div class="workout-title">Hockey Practice</div>
-                            <div class="workout-stats">90 min · 650 cal</div>
+                    ${gameState.phone.fitness.workouts.map(workout => `
+                        <div class="workout-item">
+                            <div class="workout-icon"><i class="fa-solid fa-dumbbell"></i></div>
+                            <div class="workout-details">
+                                <div class="workout-title">${workout.type}</div>
+                                <div class="workout-stats">${workout.duration} min · ${workout.calories} cal</div>
+                            </div>
+                            <div class="workout-time">${workout.date.toLocaleDateString()}</div>
                         </div>
-                        <div class="workout-time">Today</div>
-                    </div>
-                    <div class="workout-item">
-                        <div class="workout-icon"><i class="fa-solid fa-dumbbell"></i></div>
-                        <div class="workout-details">
-                            <div class="workout-title">Weight Training</div>
-                            <div class="workout-stats">45 min · 320 cal</div>
-                        </div>
-                        <div class="workout-time">Yesterday</div>
-                    </div>
+                    `).join('')}
                 </div>
             </div>
         </div>`,
+    // New: News app
+    news: () => `
+        <div class="phone-app-view app-news">
+            <div class="app-header">
+                <div class="back-button" data-app="home">&lt;</div>
+                <div class="header-title">News</div>
+                <div class="placeholder"></div>
+            </div>
+            <div class="app-content news-feed">
+                ${renderNews()}
+            </div>
+        </div>`,
+    // New: Study app (mini-app)
+    study: () => renderApps('study')
 };
 
 // Helper function to format message timestamps
 function formatMessageTime(timestamp) {
-    if (!timestamp) return '';
-    
-    const date = new Date(timestamp);
     const now = new Date();
-    const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) {
-        return date.toLocaleTimeString('en-US', {hour: 'numeric', minute:'2-digit'});
-    } else if (diffDays === 1) {
-        return 'Yesterday';
-    } else if (diffDays < 7) {
-        return date.toLocaleDateString('en-US', {weekday: 'short'});
-    } else {
-        return date.toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
-    }
+    const msgDate = new Date(timestamp);
+    const diff = (now - msgDate) / 1000; // seconds
+
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+    return msgDate.toLocaleDateString();
 }
 
-// Helper function to format note dates
-function formatNoteDate(timestamp) {
-    if (!timestamp) return '';
-    
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) {
-        return 'Today';
-    } else if (diffDays === 1) {
-        return 'Yesterday';
-    } else {
-        return date.toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
-    }
-}
-
-// Render the phone UI based on current screen
+// Render phone screen
 export function renderPhone() {
-    let content = '';
-    const screenTemplate = phoneTemplates[currentPhoneScreen];
-    
-    if (typeof screenTemplate === 'function') {
-        content = screenTemplate(currentChat);
-    } else {
-        content = phoneTemplates.home();
+    if (gameState.phone.battery < 20) {
+        alert('Phone battery low! Recharge by resting (increase energy).');
+        elements.phoneModal.classList.add('hidden');
+        return;
     }
+    elements.phoneScreen.innerHTML = phoneTemplates[currentPhoneScreen] ? phoneTemplates[currentPhoneScreen](currentChat) : '';
+    // Battery drain
+    gameState.phone.battery -= 1;
+    if (gameState.phone.battery < 0) gameState.phone.battery = 0;
 
-    elements.phoneScreen.innerHTML = content + `<div id="phone-home-button-area"><button id="phone-home-button"></button></div>`;
-    
     // Apply theme and wallpaper
-    elements.phoneContainer.className = ''; // Reset
-    elements.phoneContainer.classList.add('phone-container', `${gameState.phone.theme}-theme`);
-    elements.phoneScreen.classList.remove('wallpaper-default', 'wallpaper-1', 'wallpaper-2');
-    elements.phoneScreen.classList.add(`wallpaper-${gameState.phone.wallpaper}`);
+    elements.phoneModal.className = `phone-modal theme-${gameState.phone.theme} wallpaper-${gameState.phone.wallpaper}`;
 
+    // Add event listeners for the current screen
     addPhoneEventListeners();
-    
-    // Scroll to bottom of chat if in chat view
-    if (currentPhoneScreen === 'chat') {
-        const chatMessages = elements.phoneScreen.querySelector('.chat-messages');
-        if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
 }
 
-// Handle sending a message in chat
-function handleSendMessage() {
-    const input = document.getElementById('chat-input');
-    if (!input || !input.value.trim() || !currentChat) return;
-
-    const messageText = input.value.trim();
-    input.value = ''; // Clear input field
-    
-    // Add player's message with timestamp
-    addMessage(currentChat, 'player', messageText, new Date());
-    renderPhone(); // Re-render immediately with player's message
-
-    // Generate and add NPC reply with a delay
-    setTimeout(() => {
-        const npcReply = generateNpcReply(currentChat, messageText);
-        addMessage(currentChat, currentChat, npcReply, new Date());
-        gameState.notifications++;
-        
-        // Update UI if chat is still open
-        if (currentPhoneScreen === 'chat' && currentChat) {
-            renderPhone();
-        }
-    }, 1500 + Math.random() * 1500); // Random delay between 1.5-3 seconds
-}
-
-// Add event listeners to phone UI elements
+// Add event listeners for phone interactions
 function addPhoneEventListeners() {
-    // Home button
-    const homeButtonArea = elements.phoneScreen.querySelector('#phone-home-button-area');
-    if (homeButtonArea) {
-        homeButtonArea.addEventListener('click', () => {
-            currentPhoneScreen = 'home';
-            renderPhone();
-        });
-    }
-
     // App icons and back buttons
     elements.phoneScreen.querySelectorAll('.app-icon, .back-button').forEach(el => {
         el.addEventListener('click', (e) => {
@@ -742,4 +516,19 @@ function addPhoneEventListeners() {
             item.classList.add('selected');
         });
     });
+}
+
+// Handle sending messages in chat
+function handleSendMessage() {
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    if (message) {
+        addMessage(currentChat, 'player', message);
+        input.value = '';
+        // Generate NPC reply
+        const reply = generateNpcReply(currentChat, message);
+        setTimeout(() => addMessage(currentChat, currentChat, reply), 1000);
+        // Update chat view
+        renderPhone();
+    }
 }

@@ -29,6 +29,8 @@ export const elements = {
     phoneModal: document.getElementById('phone-modal'),
     phoneContainer: document.getElementById('phone-container'),
     phoneScreen: document.getElementById('phone-screen'),
+    // New: For charts
+    statChart: document.getElementById('stat-chart'),
 };
 
 // Utility functions

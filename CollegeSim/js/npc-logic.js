@@ -62,6 +62,66 @@ const npcPersonalities = {
             shortResponses: true
         },
         contextMemory: []
+    },
+    teammate_tyler: {
+        traits: {
+            seriousness: 0.2,
+            patience: 0.4,
+            supportiveness: 0.5,
+            strictness: 0.1
+        },
+        topics: {
+            hockey: 0.7,
+            academics: 0.3,
+            personal: 0.5,
+            social: 0.95
+        },
+        vocabulary: {
+            formal: false,
+            usesJargon: false,
+            shortResponses: true
+        },
+        contextMemory: []
+    },
+    professor_miller: {
+        traits: {
+            seriousness: 0.9,
+            patience: 0.7,
+            supportiveness: 0.5,
+            strictness: 0.8
+        },
+        topics: {
+            hockey: 0.2,
+            academics: 0.95,
+            personal: 0.4,
+            social: 0.3
+        },
+        vocabulary: {
+            formal: true,
+            usesJargon: true,
+            shortResponses: false
+        },
+        contextMemory: []
+    },
+    sarah: {
+        traits: {
+            seriousness: 0.4,
+            patience: 0.8,
+            supportiveness: 0.8,
+            strictness: 0.3
+        },
+        topics: {
+            hockey: 0.6,
+            academics: 0.5,
+            personal: 0.7,
+            social: 0.9
+        },
+        vocabulary: {
+            formal: false,
+            usesJargon: false,
+            shortResponses: false
+        },
+        contextMemory: []
     }
 };
 
@@ -186,204 +246,119 @@ function updateNpcMemory(npcId, playerMessage, npcResponse) {
     }
 }
 
-// Generate a response based on NPC personality, topic, and context
+// Generate contextual response based on personality, topic, sentiment, and memory
 function generateContextualResponse(npcId, playerMessage, topic, sentiment) {
-    const npc = npcPersonalities[npcId];
-    if (!npc) return null;
+    if (!npcPersonalities[npcId]) return null;
     
-    // Check if we should reference previous context
-    const shouldReferenceContext = npc.contextMemory.length > 0 && Math.random() < 0.3;
+    const personality = npcPersonalities[npcId];
+    const memory = personality.contextMemory;
+    
+    // Reference recent context if available
     let contextReference = '';
-    
-    if (shouldReferenceContext) {
-        const recentContext = npc.contextMemory[npc.contextMemory.length - 1];
-        if (recentContext && recentContext.topic === topic.mainTopic) {
-            contextReference = `About ${recentContext.topic} again, `;
+    if (memory.length > 0) {
+        const lastMemory = memory[memory.length - 1];
+        if (lastMemory.topic === topic.mainTopic) {
+            contextReference = `Regarding what you said earlier about ${lastMemory.playerMessage.substring(0, 20)}..., `;
         }
     }
     
-    // Base responses by NPC and topic
-    const responses = {
+    // Base response pool by NPC and topic
+    const responsePools = {
         coach: {
-            hockey: [
-                "Focus on your fundamentals. That's what makes a great player.",
-                "I need you at 100% for the next game. Keep working hard.",
-                "Your skating has improved, but your defensive positioning needs work.",
-                "The team is counting on you to perform.",
-                "We'll review the game tape tomorrow. Be ready to learn."
-            ],
-            academics: [
-                "Academics come first. No grades, no ice time.",
-                "Make sure you're keeping up with your classes.",
-                "I expect all my players to excel in the classroom too.",
-                "Study hall is mandatory for anyone with a GPA below 3.0.",
-                "Talk to the academic advisor if you're struggling."
-            ],
-            personal: [
-                "Keep your personal issues off the ice.",
-                "Mental toughness is part of being an athlete.",
-                "If you need time, let me know. But I expect you back at 100%.",
-                "The team psychologist is available if you need to talk.",
-                "Take care of yourself, but remember your commitment to this team."
-            ],
-            social: [
-                "Your social life shouldn't interfere with hockey.",
-                "Be careful about your public image. You represent this program.",
-                "I don't care what you do off-ice as long as it doesn't affect your performance.",
-                "Team bonding is important, but know your limits.",
-                "Stay out of trouble. I don't want to hear about you from campus security."
-            ],
-            general: [
-                "Keep me updated.",
-                "Let's talk more at practice.",
-                "I expect your best effort every day.",
-                "Remember what we're working toward.",
-                "Stay focused on our goals."
-            ]
+            hockey: ['Keep pushing in practice.', 'Focus on defense.', 'Team first always.'],
+            academics: ['Grades matter as much as goals.', 'Balance is key.'],
+            personal: ['Talk to the trainer if needed.', 'Stay focused.'],
+            social: ['Team bonding is good, but not too much.'],
+            general: ['What\'s on your mind?']
         },
         mom: {
-            hockey: [
-                "I'm so proud of you playing college hockey! Are you having fun?",
-                "Your father and I are planning to come to your next home game!",
-                "Are you getting enough ice time? You know you can talk to your coach.",
-                "Don't forget to ice those bruises, honey.",
-                "I still have all your youth hockey trophies in your room!"
-            ],
-            academics: [
-                "How are your classes going? Are you keeping up with your studies?",
-                "Don't let hockey get in the way of your education, sweetie.",
-                "Do you need any money for textbooks?",
-                "I saw your school is offering tutoring. Maybe that would help?",
-                "Your father and I are so proud of you balancing hockey and school!"
-            ],
-            personal: [
-                "Are you eating enough? You sound tired.",
-                "Make sure you're getting enough sleep, honey.",
-                "I worry about you. Are you taking care of yourself?",
-                "You know you can always come home if you need a break.",
-                "I sent you a care package. It should arrive tomorrow!"
-            ],
-            social: [
-                "Have you made any new friends? What are they like?",
-                "Just be careful at those college parties, okay?",
-                "Your high school friends were asking about you!",
-                "Are you dating anyone? You know I won't pry too much...",
-                "Don't spend all your time studying and playing hockey. Have some fun too!"
-            ],
-            general: [
-                "I love you so much, sweetie!",
-                "Call me more often, okay? I miss hearing your voice.",
-                "Your father says hi!",
-                "Let me know if you need anything at all.",
-                "I'm always here for you, no matter what."
-            ]
+            hockey: ['Be safe on the ice!', 'Proud of you always.'],
+            academics: ['Grades hard, honey.', 'Need help with homework?'],
+            personal: ['Are you eating well?', 'Call if you\'re homesick.'],
+            social: ['Make good friends.', 'Have fun but be careful.'],
+            general: ['How are you feeling?']
         },
         teammate_jake: {
-            hockey: [
-                "Coach was brutal at practice today. My legs are dead.",
-                "You coming to the optional skate tomorrow? Could use your help on the power play.",
-                "Did you see that sick goal in the NHL game last night?",
-                "We need to step it up before the weekend series.",
-                "The freshmen are looking good this year. Gonna be competitive for ice time."
-            ],
-            academics: [
-                "You in Professor Miller's class? I need the notes from yesterday.",
-                "This econ homework is killing me. You get it done yet?",
-                "How'd you do on that exam? I barely passed.",
-                "Thinking about switching my major. This business stuff is boring.",
-                "You know anyone in the study group for biology? I need to join."
-            ],
-            personal: [
-                "Dude, I'm exhausted. Coach's workouts plus these 8am classes are brutal.",
-                "My shoulder's still messed up from that hit last week.",
-                "Parents keep asking when I'm coming home. Told them not until Thanksgiving.",
-                "Been feeling kinda off lately. Might be coming down with something.",
-                "Need to catch up on sleep this weekend."
-            ],
-            social: [
-                "Party at the lacrosse house tonight. You in?",
-                "Met this girl at the Hub yesterday. Might ask her out.",
-                "The boys are getting together to watch the game. Bring snacks if you come.",
-                "Did you see what Tyler posted? Dude is wild.",
-                "We should hit up that new place downtown this weekend."
-            ],
-            general: [
-                "What's up man?",
-                "Let me know what's going on later.",
-                "Cool, keep me posted.",
-                "Sounds good bro.",
-                "Later dude."
-            ]
+            hockey: ['Let\'s crush practice!', 'Nice shot yesterday.'],
+            academics: ['Class sucks, man.', 'Copy your notes?'],
+            personal: ['You okay bro?', 'Hit the gym later?'],
+            social: ['Party tonight?', 'Met any girls?'],
+            general: ['What\'s up?']
+        },
+        teammate_tyler: {
+            hockey: ['Game on Friday?', 'Coach is tough.'],
+            academics: ['Skipped class again.', 'Test was easy.'],
+            personal: ['Tired AF.', 'Injured my knee.'],
+            social: ['Big party!', 'Double date?'],
+            general: ['Yo.']
+        },
+        professor_miller: {
+            hockey: ['Sports and studies balance.', 'Missed class for game?'],
+            academics: ['Review chapter 3.', 'Office hours tomorrow.'],
+            personal: ['Everything okay?', 'Stress management tips.'],
+            social: ['Join study group.', 'Campus events.'],
+            general: ['Questions?']
+        },
+        sarah: {
+            hockey: ['Come to the game?', 'You scored!'],
+            academics: ['Study together?', 'Psych exam hard.'],
+            personal: ['Feeling better?', 'Miss you.'],
+            social: ['Movie night?', 'Art show Friday.'],
+            general: ['Hi!']
         }
     };
     
-    // Select appropriate responses based on topic
-    const topicResponses = responses[npcId]?.[topic.mainTopic] || responses[npcId]?.general;
-    if (!topicResponses) return null;
-    
-    // Modify response based on sentiment
-    let responsePool = [...topicResponses];
-    
-    // If it's a question, prepare question-specific responses
+    // Adjust based on sentiment
+    let responsePool = responsePools[npcId]?.[topic.mainTopic] || responsePools[npcId].general;
     if (sentiment.isQuestion) {
-        const questionResponses = {
-            coach: {
-                hockey: ["That's a good question about the team. ", "Regarding your question about hockey, ", "About your hockey question, "],
-                academics: ["About your academic question, ", "Regarding your studies, ", "About your classes, "],
-                personal: ["About your personal question, ", "Regarding that, ", "I'll tell you this: "],
-                social: ["About your social question, ", "Regarding that, ", "Let me be clear: "]
-            },
-            mom: {
-                hockey: ["About your hockey question, sweetie, ", "Oh, you're asking about hockey? Well, ", "Let me think about your hockey question... "],
-                academics: ["About your studies, honey, ", "That's a good question about school. ", "Regarding your academic question, "],
-                personal: ["About your personal question, dear, ", "Oh, you're asking about that? Well, ", "Let me see... "],
-                social: ["About your friends, ", "That's a good question about your social life. ", "Well, regarding that, "]
-            },
-            teammate_jake: {
-                hockey: ["About hockey? ", "You're asking about the team? ", "Hockey question, huh? "],
-                academics: ["About class? ", "School stuff? ", "Academic question? "],
-                personal: ["About that? ", "You're asking me personally? ", "Well, if you want to know, "],
-                social: ["About the social scene? ", "Party question? ", "About that situation? "]
-            }
-        };
-        
-        const prefix = questionResponses[npcId]?.[topic.mainTopic]?.[Math.floor(Math.random() * 3)] || "";
-        responsePool = responsePool.map(response => prefix + response);
+        responsePool = responsePool.map(r => `To answer your question, ${r.toLowerCase()}`);
+    }
+    if (sentiment.isPositive) {
+        responsePool = responsePool.map(r => `Glad to hear! ${r}`);
+    } else if (sentiment.isNegative) {
+        responsePool = responsePool.map(r => `Sorry about that. ${r}`);
     }
     
-    // Adjust response based on relationship level
-    const relationshipLevel = gameState.relationships[npcId]?.level || 50;
-    if (relationshipLevel > 75) {
-        // Very positive relationship - more supportive, friendly responses
-        if (npcId === 'coach') {
-            responsePool = responsePool.map(r => r.replace(/I expect|you need to|make sure/g, "I'd appreciate if you"));
-        } else if (npcId === 'mom') {
-            responsePool = responsePool.map(r => r + " I'm so proud of you!");
-        } else if (npcId === 'teammate_jake') {
-            responsePool = responsePool.map(r => r + " You're the best, man.");
-        }
-    } else if (relationshipLevel < 25) {
-        // Poor relationship - more distant, cold responses
-        if (npcId === 'coach') {
-            responsePool = responsePool.map(r => r.replace(/good|great|improved/g, "acceptable"));
-        } else if (npcId === 'mom') {
-            responsePool = responsePool.map(r => r.replace(/love|proud|sweetie|honey/g, ""));
-        } else if (npcId === 'teammate_jake') {
-            responsePool = responsePool.map(r => r.replace(/we|us/g, "I"));
-        }
+    // Adjust for personality traits
+    if (personality.traits.seriousness > 0.7) {
+        responsePool = responsePool.map(r => r.replace(/!/, '.'));
+    }
+    if (personality.traits.supportiveness > 0.7) {
+        responsePool = responsePool.map(r => r + ' I\'m here for you.');
     }
     
-    // Select a random response from the pool
+    // New: Tie to game events/stats
+    if (topic.mainTopic === 'hockey' && gameState.player.seasonStats.points > 10) {
+        responsePool.push('You\'re on fire this season!');
+    } else if (topic.mainTopic === 'academics' && gameState.player.status.gpa < 2.5) {
+        responsePool.push('Your grades are slipping. Need help?');
+    } else if (topic.mainTopic === 'personal' && gameState.player.status.mentalHealth < 50) {
+        responsePool.push('You seem down. Talk about it?');
+    } else if (topic.mainTopic === 'social' && gameState.player.status.happiness > 80) {
+        responsePool.push('Glad you\'re having fun!');
+    }
+    
+    // Select random response
     const randomIndex = Math.floor(Math.random() * responsePool.length);
     let response = contextReference + responsePool[randomIndex];
     
-    // Add emoji for certain NPCs and sentiments
-    if (npcId === 'mom' && (sentiment.isPositive || Math.random() > 0.7)) {
-        const momEmojis = ['❤️', '😊', '🤗', '💕', '👩‍👦'];
-        response += ' ' + momEmojis[Math.floor(Math.random() * momEmojis.length)];
-    } else if (npcId === 'teammate_jake' && (topic.mainTopic === 'social' || sentiment.isPositive)) {
-        const jakeEmojis = ['🏒', '🍻', '👊', '😎', '🔥'];
-        response += ' ' + jakeEmojis[Math.floor(Math.random() * jakeEmojis.length)];
+    // Adjust length based on vocabulary
+    if (personality.vocabulary.shortResponses) {
+        response = response.split(' ').slice(0, 10).join(' ');
+    }
+    
+    // Add emoji based on NPC and sentiment
+    if (sentiment.isPositive) {
+        const positiveEmojis = npcId === 'mom' ? ' ❤️' : (npcId === 'teammate_jake' ? ' 👍' : ' 😊');
+        response += positiveEmojis;
+    } else if (sentiment.isNegative) {
+        const negativeEmojis = npcId === 'mom' ? ' 😔' : (npcId === 'coach' ? ' 💪' : ' 😕');
+        response += negativeEmojis;
+    }
+    
+    // Add jargon if applicable
+    if (personality.vocabulary.usesJargon && topic.mainTopic === 'hockey') {
+        response += ' Remember, no icing on the cake.';
     }
     
     return response;
@@ -444,6 +419,24 @@ function findKeywordResponse(contactId, playerMessage) {
             "beer": "I've got a case in my fridge. Come over later.",
             "help": "I got you, bro. What do you need?",
             "tired": "Same. These morning workouts are brutal."
+        },
+        teammate_tyler: {
+            "party": "Let's rage!",
+            "game": "Score a hat trick!",
+            "tired": "Coffee time.",
+            "help": "Sure thing."
+        },
+        professor_miller: {
+            "exam": "Study the notes.",
+            "help": "Office hours.",
+            "grade": "You can improve.",
+            "thanks": "You're welcome."
+        },
+        sarah: {
+            "date": "Sounds fun!",
+            "class": "Psych is boring.",
+            "art": "Come to my show.",
+            "hi": "Hey! 😊"
         }
     };
     
@@ -476,6 +469,24 @@ function findKeywordResponse(contactId, playerMessage) {
             "Sounds good bro.",
             "I'm heading to the gym. Wanna join?",
             "Did you finish the assignment for econ?"
+        ],
+        teammate_tyler: [
+            "Cool.",
+            "Later.",
+            "Party?",
+            "Game on."
+        ],
+        professor_miller: [
+            "See you in class.",
+            "Review the material.",
+            "Questions?",
+            "Good luck on the test."
+        ],
+        sarah: [
+            "What's up?",
+            "Miss you.",
+            "Study date?",
+            "Hi! 😊"
         ]
     };
     
@@ -485,4 +496,18 @@ function findKeywordResponse(contactId, playerMessage) {
     }
     
     return "...";
+}
+
+// New: Initialize NPCs with event hooks
+export function initializeNPCs() {
+    // Example: Coach comments on low stats
+    if (gameState.player.status.energy < 50) {
+        addMessage('coach', 'coach', "You look tired. Get rest or you'll be benched.");
+    }
+    if (gameState.player.status.gpa < 2.5) {
+        addMessage('professor_miller', 'professor_miller', "Your grades need improvement. See me.");
+    }
+    if (gameState.player.seasonStats.points > 5) {
+        addMessage('teammate_jake', 'teammate_jake', "Killing it on the ice! Keep it up.");
+    }
 }

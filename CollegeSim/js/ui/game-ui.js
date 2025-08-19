@@ -68,6 +68,9 @@ export function updateDashboardUI() {
                 </div>
             </div>
         `).join('');
+
+    // New: Update stat chart
+    updateStatChart();
 }
 
 // Helper function to format attribute names (e.g., "puckHandling" -> "Puck Handling")
@@ -97,6 +100,31 @@ export function showEvent(eventId) {
             updateUI();
         };
         elements.eventChoices.appendChild(button);
+    });
+    document.getElementById('sound-effect').play(); // New: Play audio
+}
+
+// New: Update stat chart
+function updateStatChart() {
+    const ctx = elements.statChart.getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'], // Dynamic based on gameWeek
+            datasets: [
+                { label: 'GPA', data: [3.0, gameState.player.status.gpa, gameState.player.status.gpa - 0.1, gameState.player.status.gpa + 0.2] },
+                { label: 'Points', data: [0, gameState.player.seasonStats.points, gameState.player.seasonStats.points + 2, gameState.player.seasonStats.points + 5] },
+                { label: 'Energy', data: [100, gameState.player.status.energy, gameState.player.status.energy - 10, gameState.player.status.energy + 5] }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
     });
 }
 

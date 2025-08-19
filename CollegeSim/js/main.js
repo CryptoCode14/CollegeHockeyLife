@@ -2,6 +2,10 @@ import { initializeMap } from './map.js';
 import { updateUI, showEvent, initializeAllUI } from './ui/index.js';
 import { startGameLoop } from './game-loop.js';
 import { socialFeedPosts, datingProfiles } from './app-data.js';
+import { generateSocialPosts } from './social-data.js';
+import { renderMessages } from './phone-messages.js';
+import { renderApps } from './phone-apps.js';
+import { initializeNPCs } from './npc-logic.js';
 
 export let gameState = {
     player: {
@@ -25,7 +29,10 @@ export let gameState = {
             reputation: 50, 
             gpa: 3.0,
             happiness: 75,
-            health: 90
+            health: 90,
+            injury: 0,
+            nutrition: 100,
+            mentalHealth: 100
         },
         seasonStats: { 
             gamesPlayed: 0, 
@@ -148,7 +155,9 @@ export let gameState = {
                 { type: 'Hockey Practice', duration: 90, calories: 650, date: new Date('2025-08-17T15:00:00') },
                 { type: 'Weight Training', duration: 45, calories: 320, date: new Date('2025-08-16T10:30:00') }
             ]
-        }
+        },
+        news: [], // New: For phone news tab
+        battery: 100 // New: Battery simulation
     },
     // Game progress tracking
     progress: {
@@ -158,7 +167,8 @@ export let gameState = {
         storylineProgress: 0,
         gameWeek: 1,
         seasonPhase: 'preseason' // preseason, regular, playoffs, offseason
-    }
+    },
+    semester: 'Fall' // New
 };
 
 // Enhanced message function with timestamp support
@@ -183,6 +193,8 @@ export function saveGame() {
             relationships: gameState.relationships,
             progress: gameState.progress,
             gameDate: gameState.gameDate.toISOString(),
+            phone: gameState.phone, // Added
+            semester: gameState.semester // Added
             // Don't save everything to keep save file smaller
         };
         localStorage.setItem('collegeHockeyLifeSave', JSON.stringify(saveData));
@@ -204,6 +216,8 @@ export function loadGame() {
         gameState.relationships = saveData.relationships;
         gameState.progress = saveData.progress;
         gameState.gameDate = new Date(saveData.gameDate);
+        gameState.phone = saveData.phone;
+        gameState.semester = saveData.semester;
         
         updateUI();
         return true;
@@ -220,11 +234,17 @@ function initializeGame() {
     // Initialize map
     initializeMap(gameState);
     
+    // Initialize NPCs
+    initializeNPCs();
+    
     // Start game loop
     startGameLoop();
     
     // Show welcome event
     showEvent('event_welcome');
+
+    // New: Generate initial dynamic content
+    generateSocialPosts();
 }
 
 document.addEventListener('DOMContentLoaded', initializeGame);

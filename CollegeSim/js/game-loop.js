@@ -1,6 +1,8 @@
 import { gameState } from './main.js';
 import { updateUI } from './ui/index.js';
 import { eventLibrary } from './events.js';
+import { applyStatBounds } from './app-data.js';
+import { simulateGame } from './hockey-sim.js';
 
 const GAME_TICK_INTERVAL = 2000; // 2 seconds per tick
 const MINUTES_PER_TICK = 15; // Each tick advances the game time by 15 minutes
@@ -48,6 +50,25 @@ function advanceTime() {
     
     // Check for calendar events
     checkCalendarEvents();
+
+    // New: Semester/year progression
+    const month = gameState.gameDate.getMonth();
+    if (month === 11 && gameState.gameDate.getDate() === 15) gameState.semester = 'Winter'; // Fall to Winter
+    if (month === 3 && gameState.gameDate.getDate() === 1) gameState.semester = 'Spring'; // Winter to Spring
+    if (month === 5 && gameState.gameDate.getDate() === 15) { 
+        gameState.semester = 'Summer'; // End year
+        gameState.gameDate.setFullYear(gameState.gameDate.getFullYear() + 1); // Advance year
+        if (gameState.gameDate.getFullYear() === 2029) endGameDraft(); // Senior year end
+    }
+    if (month === 8 && gameState.gameDate.getDate() === 1) gameState.semester = 'Fall'; // New year
+}
+
+// New: Endgame NHL draft
+function endGameDraft() {
+    const totalPoints = gameState.player.seasonStats.points;
+    const draftPosition = Math.max(1, Math.floor(200 - totalPoints / 2)); // Better stats = higher pick
+    alert(`Congratulations! You've completed college. NHL Draft: Picked #${draftPosition} overall!`);
+    // Optional: End game or start pro mode
 }
 
 // Check if there are any calendar events at the current time
@@ -85,6 +106,8 @@ function checkCalendarEvents() {
                 } else if (event.title.includes('ECON') || event.title.includes('PSYCH')) {
                     // Could trigger a class event
                     checkRandomEvent('class_event', 0.7); // 70% chance to trigger class event
+                } else if (event.title.includes('Game')) {
+                    simulateGame(); // New: Simulate hockey game
                 }
             }
         }
@@ -118,12 +141,21 @@ function updatePlayerStatus() {
         gameState.player.status.health += 0.2;
     }
 
-    // Clamp values to be within 0-100 range (except GPA)
-    gameState.player.status.energy = Math.max(0, Math.min(100, gameState.player.status.energy));
-    gameState.player.status.stress = Math.max(0, Math.min(100, gameState.player.status.stress));
-    gameState.player.status.reputation = Math.max(0, Math.min(100, gameState.player.status.reputation));
-    gameState.player.status.happiness = Math.max(0, Math.min(100, gameState.player.status.happiness));
-    gameState.player.status.health = Math.max(0, Math.min(100, gameState.player.status.health));
+    // Nutrition decreases over time, affects health
+    gameState.player.status.nutrition -= 0.2;
+    if (gameState.player.status.nutrition < 50) {
+        gameState.player.status.health -= 0.5;
+    }
+
+    // Mental health affected by stress and happiness
+    if (gameState.player.status.stress > 70) {
+        gameState.player.status.mentalHealth -= 0.3;
+    } else if (gameState.player.status.happiness > 70) {
+        gameState.player.status.mentalHealth += 0.2;
+    }
+
+    // Apply bounds and debuffs
+    applyStatBounds(gameState);
 
     // Clamp relationship values
     for (let rel in gameState.relationships) {
@@ -152,6 +184,12 @@ function checkRandomEvents() {
             checkRandomEvent(event.id);
         }
     });
+
+    // New: Random weather affecting events (e.g., snow delays practice)
+    const weather = Math.random() > 0.8 ? 'snow' : 'clear'; // Simple random
+    if (weather === 'snow' && Math.random() < 0.2) {
+        checkRandomEvent('event_weather_delay');
+    }
 }
 
 // Check if a specific random event should trigger
@@ -171,10 +209,10 @@ function checkRandomEvent(eventType, forcedChance = null) {
         'team_practice': ['event_team_practice_good', 'event_team_practice_bad'],
         'class_event': ['event_class_question', 'event_class_group_project'],
         'morning_class': ['event_oversleep', 'event_class_pop_quiz'],
-        'weekend_party': ['event_party_invite', 'event_party_drama']
+        'weekend_party': ['event_party_invite', 'event_party_drama'],
+        'event_weather_delay': ['event_snow_delay']
     };
     
-    // Get potential events for this type
     const potentialEvents = eventMap[eventType] || [];
     
     if (potentialEvents.length > 0) {
