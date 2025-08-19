@@ -17,6 +17,8 @@
         <header id="main-header">
             <div id="player-stats">
                 <span><i class="fa-solid fa-user"></i> <strong id="player-name"></strong></span>
+                <span><i class="fa-solid fa-bolt"></i> Energy: <strong id="player-energy">100</strong></span>
+                <span><i class="fa-solid fa-graduation-cap"></i> GPA: <strong id="player-gpa">3.0</strong></span>
                 <span><i class="fa-solid fa-brain"></i> Stress: <strong id="player-stress">0</strong></span>
                 <span><i class="fa-solid fa-star"></i> Reputation: <strong id="player-reputation">0</strong></span>
             </div>
@@ -33,14 +35,24 @@
     <div id="menu-overlay" class="hidden">
         <div id="menu-content">
             <div id="menu-tabs">
-                <button class="menu-tab-link active" data-tab="Profile">Profile</button>
+                <button class="menu-tab-link active" data-tab="Dashboard">Dashboard</button>
                 <button class="menu-tab-link" data-tab="Schedule">Schedule</button>
                 <button class="menu-tab-link" data-tab="Team">Team</button>
+                <button class="menu-tab-link" data-tab="Relationships">Relationships</button>
             </div>
             <div id="menu-tab-content">
-                <div id="Profile" class="menu-tab active">Player profile info here...</div>
+                <div id="Dashboard" class="menu-tab active">
+                    <h3>Player Attributes</h3>
+                    <div id="player-attributes"></div>
+                    <h3>Season Stats</h3>
+                    <div id="player-season-stats"></div>
+                </div>
                 <div id="Schedule" class="menu-tab">Weekly schedule info here...</div>
                 <div id="Team" class="menu-tab">Team roster and lines info here...</div>
+                <div id="Relationships" class="menu-tab">
+                    <h3>Relationships</h3>
+                    <div id="relationships-content"></div>
+                </div>
             </div>
         </div>
         <button id="close-menu-button"><i class="fa-solid fa-xmark"></i></button>
