@@ -6,21 +6,22 @@
     <title>College Hockey Life</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <!-- Link to the new stylesheet -->
+    <link rel="stylesheet" href="liquid-glass.css">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
     <script type="module" src="js/main.js"></script>
 </head>
 <body>
     <div id="game-container">
         <header id="main-header">
-            <div id="player-name"></div>
+            <div id="player-name" class="readable-text"></div>
             <div id="player-stats">
-                <span>Energy: <strong id="player-energy">100</strong></span>
-                <span>GPA: <strong id="player-gpa">3.00</strong></span>
-                <span>Stress: <strong id="player-stress">10</strong></span>
-                <span>Reputation: <strong id="player-reputation">50</strong></span>
+                <span class="readable-text">Energy: <strong id="player-energy">100</strong></span>
+                <span class="readable-text">GPA: <strong id="player-gpa">3.00</strong></span>
+                <span class="readable-text">Stress: <strong id="player-stress">10</strong></span>
+                <span class="readable-text">Reputation: <strong id="player-reputation">50</strong></span>
             </div>
-            <div id="game-date-display"></div>
+            <div id="game-date-display" class="readable-text"></div>
         </header>
         
         <div id="map-container"></div>
@@ -34,16 +35,16 @@
 
     <!-- Menu Overlay -->
     <div id="menu-overlay" class="hidden">
-        <div id="menu-content">
+        <div id="menu-content" class="liquid-glass">
             <div id="menu-header">
-                <h2>Dashboard</h2>
+                <h2 class="readable-text">Dashboard</h2>
                 <button id="close-menu-button">×</button>
             </div>
             <div class="menu-tabs">
-                <a class="menu-tab-link active" data-tab="attributes-tab">Attributes</a>
-                <a class="menu-tab-link" data-tab="stats-tab">Stats</a>
-                <a class="menu-tab-link" data-tab="relationships-tab">Relationships</a>
-                <a class="menu-tab-link" data-tab="achievements-tab">Achievements</a> <!-- New -->
+                <a class="menu-tab-link active readable-text" data-tab="attributes-tab">Attributes</a>
+                <a class="menu-tab-link readable-text" data-tab="stats-tab">Stats</a>
+                <a class="menu-tab-link readable-text" data-tab="relationships-tab">Relationships</a>
+                <a class="menu-tab-link readable-text" data-tab="achievements-tab">Achievements</a>
             </div>
             <div id="attributes-tab" class="menu-tab active">
                 <div id="player-attributes"></div>
@@ -54,18 +55,18 @@
             <div id="relationships-tab" class="menu-tab">
                 <div id="relationships-content"></div>
             </div>
-            <div id="achievements-tab" class="menu-tab"> <!-- New -->
+            <div id="achievements-tab" class="menu-tab">
                 <div id="achievements-content"></div>
             </div>
-            <canvas id="stat-chart" width="400" height="200"></canvas> <!-- For charts -->
+            <canvas id="stat-chart" width="400" height="200"></canvas>
         </div>
     </div>
 
     <!-- Event Modal -->
     <div id="event-modal" class="hidden">
         <div id="event-content">
-            <h2 id="event-title"></h2>
-            <p id="event-text"></p>
+            <h2 id="event-title" class="readable-text"></h2>
+            <p id="event-text" class="readable-text"></p>
             <div id="event-choices"></div>
         </div>
     </div>
@@ -73,7 +74,9 @@
     <!-- Phone Modal -->
     <div id="phone-modal" class="hidden">
         <div id="phone-container">
-            <div id="phone-screen"></div>
+            <div id="phone-screen">
+                <!-- Phone UI will be rendered here by JavaScript -->
+            </div>
         </div>
     </div>
     
@@ -83,6 +86,6 @@
         <button id="tutorial-close">Got it!</button>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- For charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>

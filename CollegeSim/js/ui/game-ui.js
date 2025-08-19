@@ -9,10 +9,10 @@ export function updateHeaderUI() {
     elements.playerName.textContent = player.name;
     
     const oldStatus = { 
-        energy: parseInt(elements.playerEnergy.textContent), 
-        gpa: parseFloat(elements.playerGpa.textContent), 
-        stress: parseInt(elements.playerStress.textContent), 
-        reputation: parseInt(elements.playerReputation.textContent) 
+        energy: parseInt(elements.playerEnergy.textContent) || player.status.energy, 
+        gpa: parseFloat(elements.playerGpa.textContent) || player.status.gpa, 
+        stress: parseInt(elements.playerStress.textContent) || player.status.stress, 
+        reputation: parseInt(elements.playerReputation.textContent) || player.status.reputation
     };
     
     elements.playerEnergy.textContent = player.status.energy;
@@ -40,40 +40,33 @@ export function updateHeaderUI() {
 export function updateDashboardUI() {
     const { attributes, seasonStats } = gameState.player;
     
-    // Format attribute names and display values
     elements.playerAttributes.innerHTML = Object.entries(attributes)
         .map(([key, value]) => `
-            <div class="stat-item">
+            <div class="stat-item readable-text">
                 <div class="label">${formatAttributeName(key)}</div>
                 <div class="value">${value}</div>
             </div>
         `).join('');
     
-    // Format season stats names and display values
     elements.playerSeasonStats.innerHTML = Object.entries(seasonStats)
         .map(([key, value]) => `
-            <div class="stat-item">
+            <div class="stat-item readable-text">
                 <div class="label">${formatAttributeName(key)}</div>
                 <div class="value">${value}</div>
             </div>
         `).join('');
     
-    // Display relationships with progress bars
     elements.relationshipsContent.innerHTML = Object.entries(gameState.relationships)
         .map(([id, data]) => `
-            <div class="relationship-item">
+            <div class="relationship-item readable-text">
                 <strong>${data.name}</strong>
                 <div class="relationship-bar">
                     <div class="relationship-level" style="width: ${data.level}%;"></div>
                 </div>
             </div>
         `).join('');
-
-    // New: Update stat chart
-    updateStatChart();
 }
 
-// Helper function to format attribute names (e.g., "puckHandling" -> "Puck Handling")
 function formatAttributeName(name) {
     return name
         .replace(/([A-Z])/g, ' $1')
@@ -86,6 +79,7 @@ export function showEvent(eventId) {
     if (!event) return;
     
     elements.eventModal.classList.remove('hidden');
+    elements.eventModal.classList.add('liquid-glass'); // Apply glass style
     elements.eventTitle.textContent = event.title;
     elements.eventText.textContent = event.text;
     elements.eventChoices.innerHTML = '';
@@ -103,33 +97,8 @@ export function showEvent(eventId) {
     });
 }
 
-// New: Update stat chart
-function updateStatChart() {
-    const ctx = elements.statChart.getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'], // Dynamic based on gameWeek
-            datasets: [
-                { label: 'GPA', data: [3.0, gameState.player.status.gpa, gameState.player.status.gpa - 0.1, gameState.player.status.gpa + 0.2] },
-                { label: 'Points', data: [0, gameState.player.seasonStats.points, gameState.player.seasonStats.points + 2, gameState.player.seasonStats.points + 5] },
-                { label: 'Energy', data: [100, gameState.player.status.energy, gameState.player.status.energy - 10, gameState.player.status.energy + 5] }
-            ]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-}
-
 // Initialize UI event listeners
 export function initializeUIListeners() {
-    // Menu button listeners
     const mainMenuButton = document.getElementById('main-menu-button');
     if (mainMenuButton) {
         mainMenuButton.addEventListener('click', () => { 
@@ -147,30 +116,28 @@ export function initializeUIListeners() {
     
     // Menu tab navigation
     document.querySelectorAll('.menu-tab-link').forEach(tab => {
-        tab.addEventListener('click', () => {
+        tab.addEventListener('click', (e) => {
+            e.preventDefault();
             document.querySelector('.menu-tab-link.active')?.classList.remove('active');
             document.querySelector('.menu-tab.active')?.classList.remove('active');
             tab.classList.add('active');
-            document.getElementById(tab.dataset.tab).classList.add('active');
+            const targetTab = document.getElementById(tab.dataset.tab);
+            if(targetTab) targetTab.classList.add('active');
         });
     });
     
-    // Phone icon click handler
     elements.phoneIcon.addEventListener('click', () => {
         elements.phoneModal.classList.remove('hidden');
-        // This will be handled by the phone module
         window.dispatchEvent(new CustomEvent('openPhone'));
         gameState.notifications = 0;
         updateNotificationBadge();
     });
     
-    // Close phone modal when clicking outside
     elements.phoneModal.addEventListener('click', (e) => {
         if (e.target === elements.phoneModal) elements.phoneModal.classList.add('hidden');
     });
 }
 
-// Main UI update function that will be called by the game loop
 export function updateUI() {
     updateHeaderUI();
 }
