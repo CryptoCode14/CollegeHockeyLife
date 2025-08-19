@@ -44,6 +44,7 @@ export let gameState = {
             shotsTaken: 0,
             timeOnIce: 0
         },
+        money: 500 // New: Starting money for economy
     },
     gameDate: new Date('2025-08-18T08:00:00'),
     notifications: 0,
@@ -62,7 +63,8 @@ export let gameState = {
                 { 
                     sender: "coach", 
                     text: "Welcome to Penn State. See you at camp.", 
-                    timestamp: new Date('2025-08-17T14:30:00')
+                    timestamp: new Date('2025-08-17T14:30:00'),
+                    read: true // New: Track read status for notifications
                 }
             ] 
         },
@@ -71,7 +73,8 @@ export let gameState = {
                 { 
                     sender: "mom", 
                     text: "Did you finish unpacking? Don't forget to eat!", 
-                    timestamp: new Date('2025-08-17T18:15:00')
+                    timestamp: new Date('2025-08-17T18:15:00'),
+                    read: true
                 }
             ] 
         },
@@ -80,84 +83,55 @@ export let gameState = {
                 { 
                     sender: "teammate_jake", 
                     text: "Hey man, welcome to the team.", 
-                    timestamp: new Date('2025-08-17T20:45:00')
+                    timestamp: new Date('2025-08-17T20:45:00'),
+                    read: false // Unread for badge
                 }
             ] 
         },
         teammate_tyler: { 
-            messages: [
-                { 
-                    sender: "teammate_tyler", 
-                    text: "Yo, I'm having a party this weekend. You should come.", 
-                    timestamp: new Date('2025-08-18T09:20:00')
-                }
-            ] 
+            messages: [] 
         },
         professor_miller: { 
-            messages: [
-                { 
-                    sender: "professor_miller", 
-                    text: "Welcome to ECON 101. Please review the syllabus before our first class.", 
-                    timestamp: new Date('2025-08-17T11:00:00')
-                }
-            ] 
+            messages: [] 
         },
         sarah: { 
-            messages: [] // Empty conversation to start
+            messages: [] 
+        },
+        // New: Group chat example
+        team_group: { 
+            messages: [] 
         }
     },
-    // Enhanced phone state
     phone: {
-        theme: 'dark', // 'light' or 'dark'
-        wallpaper: 'default', // Corresponds to a CSS class
-        installedApps: ['messages', 'settings', 'appstore', 'chirper', 'rinkrater'],
-        appStore: {
-            available: ['calendar', 'camera', 'notes', 'maps', 'weather', 'fitness'],
+        installedApps: ['messages', 'chirper', 'rinkrater', 'calendar', 'fitness', 'news', 'weather', 'notes', 'shop'], // Added shop, weather, notes
+        theme: 'dark',
+        social: {
+            posts: socialFeedPosts,
+            myPosts: []
         },
         dating: {
             profiles: datingProfiles,
-            currentIndex: 0,
             matches: [],
-            conversations: {}
+            currentIndex: 0
         },
-        social: {
-            posts: socialFeedPosts,
-            userHandle: 'ajohnson_88',
-            followers: 124,
-            following: 87,
-            myPosts: []
-        },
-        calendar: {
-            events: [
-                { date: '2025-08-19', time: '09:00', title: 'ECON 101', location: 'Business Building 302' },
-                { date: '2025-08-19', time: '14:00', title: 'Team Practice', location: 'Pegula Ice Arena' },
-                { date: '2025-08-20', time: '11:00', title: 'PSYCH 100', location: 'Moore Building 113' },
-                { date: '2025-08-21', time: '09:30', title: 'Team Workout', location: 'Athletics Complex' },
-                { date: '2025-08-22', time: '15:30', title: 'Study Group', location: 'Pattee Library' }
-            ]
-        },
-        notes: [
-            {
-                title: 'Hockey Practice Notes',
-                content: 'Work on power play positioning. Coach wants me to shoot more from the slot.',
-                date: new Date('2025-08-17T16:30:00')
-            },
-            {
-                title: 'ECON 101 Syllabus',
-                content: 'Midterm: Oct 15\nFinal: Dec 10\nTextbook: Principles of Economics, 8th Ed.',
-                date: new Date('2025-08-17T20:15:00')
-            }
-        ],
         fitness: {
+            currentSteps: 0,
             dailyGoal: 10000,
-            currentSteps: 7245,
             workouts: [
                 { type: 'Hockey Practice', duration: 90, calories: 650, date: new Date('2025-08-17T15:00:00') },
                 { type: 'Weight Training', duration: 45, calories: 320, date: new Date('2025-08-16T10:30:00') }
             ]
         },
         news: [], // New: For phone news tab
-        battery: 100 // New: Battery simulation
+        battery: 100, // Battery simulation
+        notes: [], // New: Player notes
+        shop: { // New: Shop items
+            items: [
+                { id: 'stick', name: 'New Hockey Stick', price: 100, effect: { shooting: 5 } },
+                { id: 'skates', name: 'Speed Skates', price: 150, effect: { skating: 5 } },
+                { id: 'protein', name: 'Protein Shake', price: 20, effect: { nutrition: 10 } }
+            ]
+        }
     },
     // Game progress tracking
     progress: {
@@ -171,18 +145,35 @@ export let gameState = {
     semester: 'Fall' // New
 };
 
-// Enhanced message function with timestamp support
+// Enhanced message function with timestamp and read status
 export function addMessage(contactId, sender, messageText, timestamp = null) {
     if (!gameState.conversations[contactId]) {
-        // Create conversation if it doesn't exist
         gameState.conversations[contactId] = { messages: [] };
     }
     
-    gameState.conversations[contactId].messages.push({
+    const newMessage = {
         sender: sender,
         text: messageText,
-        timestamp: timestamp || new Date()
-    });
+        timestamp: timestamp || new Date(),
+        read: sender === 'player' // Player messages are read by default
+    };
+    
+    gameState.conversations[contactId].messages.push(newMessage);
+    
+    if (sender !== 'player') {
+        gameState.notifications++;
+    }
+}
+
+// Get unread count for app badges
+export function getUnreadCount(contactId = null) {
+    if (contactId) {
+        return gameState.conversations[contactId].messages.filter(m => !m.read).length;
+    }
+    // Total for messages app
+    return Object.values(gameState.conversations).reduce((total, conv) => {
+        return total + conv.messages.filter(m => !m.read).length;
+    }, 0);
 }
 
 // Save game state to localStorage
@@ -193,9 +184,9 @@ export function saveGame() {
             relationships: gameState.relationships,
             progress: gameState.progress,
             gameDate: gameState.gameDate.toISOString(),
-            phone: gameState.phone, // Added
-            semester: gameState.semester // Added
-            // Don't save everything to keep save file smaller
+            phone: gameState.phone,
+            semester: gameState.semester,
+            conversations: gameState.conversations // Added for read status
         };
         localStorage.setItem('collegeHockeyLifeSave', JSON.stringify(saveData));
         return true;
@@ -218,6 +209,7 @@ export function loadGame() {
         gameState.gameDate = new Date(saveData.gameDate);
         gameState.phone = saveData.phone;
         gameState.semester = saveData.semester;
+        gameState.conversations = saveData.conversations;
         
         updateUI();
         return true;

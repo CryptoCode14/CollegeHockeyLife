@@ -9,7 +9,7 @@ export const elements = {
     playerGpa: document.getElementById('player-gpa'),
     playerStress: document.getElementById('player-stress'),
     playerReputation: document.getElementById('player-reputation'),
-    gameDate: document.getElementById('game-date'),
+    gameDate: document.getElementById('game-date-display'),
     
     // Menu
     menuOverlay: document.getElementById('menu-overlay'),

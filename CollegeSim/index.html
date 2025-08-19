@@ -4,42 +4,64 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>College Hockey Life</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
-    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script type="module" src="js/main.js"></script>
 </head>
 <body>
     <div id="game-container">
         <header id="main-header">
+            <div id="player-name"></div>
             <div id="player-stats">
-                <span id="player-name"></span>
-                <span><i class="fa-solid fa-bolt"></i> Energy: <strong id="player-energy">100</strong></span>
-                <span><i class="fa-solid fa-graduation-cap"></i> GPA: <strong id="player-gpa">3.00</strong></span>
-                <span><i class="fa-solid fa-brain"></i> Stress: <strong id="player-stress">10</strong></span>
-                <span><i class="fa-solid fa-star"></i> Reputation: <strong id="player-reputation">50</strong></span>
+                <span>Energy: <strong id="player-energy">100</strong></span>
+                <span>GPA: <strong id="player-gpa">3.00</strong></span>
+                <span>Stress: <strong id="player-stress">10</strong></span>
+                <span>Reputation: <strong id="player-reputation">50</strong></span>
             </div>
-            <div id="game-date-display">
-                <i class="fa-solid fa-calendar-days"></i>
-                <span id="game-date"></span>
-            </div>
+            <div id="game-date-display"></div>
         </header>
-
+        
         <div id="map-container"></div>
-
+        
         <div id="menu-button-container">
-            <button id="main-menu-button">
-                <i class="fa-solid fa-bars"></i>
-                <span>Menu</span>
-            </button>
+            <button id="main-menu-button">Menu</button>
         </div>
-
-        <button id="phone-icon">
-            <i class="fa-solid fa-mobile-screen-button"></i>
-            <span id="notification-badge" class="hidden">0</span>
-        </button>
+        
+        <div id="phone-icon"><i class="fa-solid fa-mobile-screen"></i><span id="notification-badge" class="hidden">0</span></div>
     </div>
 
+    <!-- Menu Overlay -->
+    <div id="menu-overlay" class="hidden">
+        <div id="menu-content">
+            <div id="menu-header">
+                <h2>Dashboard</h2>
+                <button id="close-menu-button">×</button>
+            </div>
+            <div class="menu-tabs">
+                <a class="menu-tab-link active" data-tab="attributes-tab">Attributes</a>
+                <a class="menu-tab-link" data-tab="stats-tab">Stats</a>
+                <a class="menu-tab-link" data-tab="relationships-tab">Relationships</a>
+                <a class="menu-tab-link" data-tab="achievements-tab">Achievements</a> <!-- New -->
+            </div>
+            <div id="attributes-tab" class="menu-tab active">
+                <div id="player-attributes"></div>
+            </div>
+            <div id="stats-tab" class="menu-tab">
+                <div id="player-season-stats"></div>
+            </div>
+            <div id="relationships-tab" class="menu-tab">
+                <div id="relationships-content"></div>
+            </div>
+            <div id="achievements-tab" class="menu-tab"> <!-- New -->
+                <div id="achievements-content"></div>
+            </div>
+            <canvas id="stat-chart" width="400" height="200"></canvas> <!-- For charts -->
+        </div>
+    </div>
+
+    <!-- Event Modal -->
     <div id="event-modal" class="hidden">
         <div id="event-content">
             <h2 id="event-title"></h2>
@@ -48,41 +70,19 @@
         </div>
     </div>
 
-    <div id="menu-overlay" class="hidden">
-        <div id="menu-content">
-            <div id="menu-tabs">
-                <button class="menu-tab-link active" data-tab="tab-attributes">Attributes</button>
-                <button class="menu-tab-link" data-tab="tab-stats">Season Stats</button>
-                <button class="menu-tab-link" data-tab="tab-relationships">Relationships</button>
-            </div>
-            <div id="menu-tab-content">
-                <div id="tab-attributes" class="menu-tab active">
-                    <div id="player-attributes"></div>
-                </div>
-                <div id="tab-stats" class="menu-tab">
-                    <div id="player-season-stats"></div>
-                    <canvas id="stat-chart"></canvas>
-                </div>
-                <div id="tab-relationships" class="menu-tab">
-                    <div id="relationships-content"></div>
-                </div>
-            </div>
-        </div>
-        <button id="close-menu-button">&times;</button>
-    </div>
-
+    <!-- Phone Modal -->
     <div id="phone-modal" class="hidden">
         <div id="phone-container">
-            <div id="phone-screen">
-                </div>
+            <div id="phone-screen"></div>
         </div>
     </div>
     
+    <!-- Welcome Tutorial -->
     <div id="tutorial-modal" class="hidden">
         <p>Welcome to College Hockey Life! Click locations on the map to trigger events. Balance your stats to succeed.</p>
-        <button id="close-tutorial">Got it!</button>
+        <button id="tutorial-close">Got it!</button>
     </div>
 
-    <script type="module" src="js/main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- For charts -->
 </body>
 </html>

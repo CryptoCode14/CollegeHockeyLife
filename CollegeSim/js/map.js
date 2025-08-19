@@ -155,7 +155,7 @@ export function initializeMap(gameState) {
             source: 'game-locations',
             paint: {
                 'circle-radius': 8,
-                'circle-color': 'var(--highlight-blue)',
+                'circle-color': '#00aaff', /* Same as --highlight-blue */
                 'circle-stroke-width': 2,
                 'circle-stroke-color': '#ffffff'
             }
